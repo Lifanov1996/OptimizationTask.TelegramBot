@@ -5,6 +5,21 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using TelegramBot.Models;
+using TelegramBot.Repository.Request;
+
+//Contacts contacts = new(new ResponseServices());
+//var data = contacts.GetContactAsync().Result;
+//Console.WriteLine(data.CompanyAdress);
+//Console.WriteLine(data.CompanyEmail);
+//Console.WriteLine(data.CompanyNumber);
+//Console.WriteLine(data.CompanySocialNetworkFour);
+//Console.WriteLine(data.CompanySocialNetworkTwo);
+
+Applications app = new Applications();
+app.PostAppAsync(new Application { NameClient = "Ivan Post", EmailClient = "minal@mail.ru", DescriptionApp = "вфцврицфр вофцмвпцм рпвфцмвс рпфцвмрцпфсмвпры" });
+
+Console.ReadLine();
 
 var client = new TelegramBotClient("6185901925:AAE5qxhMueMwahHhJmgr2-jsS3syBqgBTok");
 

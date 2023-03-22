@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace TelegramBot.Models
 {
-    internal class Contact
+    public class Contact
     {
-        public string CompanyAdress { get; set; }
+        public string? CompanyAdress { get; set; }
         public string? CompanyNumber { get; set; }
         public string? CompanyNumberTwo { get; set; }
         public string? CompanyEmail { get; set; }

@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace TelegramBot.Models
 {
-    internal class Office
+    [Serializable]
+    public class Office
     {
-        public string Header { get; set; }
-        public string Description { get; set; }
+        public string header { get; set; }
+        public string description { get; set; }
     }
 }

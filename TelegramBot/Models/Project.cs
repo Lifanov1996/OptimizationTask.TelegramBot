@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TelegramBot.Models
 {
-    internal class Project
+    public class Project
     {
         public string Header { get; set; }
         public string File { get; set; }

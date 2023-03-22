@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TelegramBot.Repository.Interface
+namespace TelegramBot.Interface
 {
-    public interface IResponseServices
+    public interface IResponseService
     {
         Task<T> GetRespons<T>(string requestUrl);
     }

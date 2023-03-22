@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TelegramBot.Models
 {
-    internal class Tiding
+    public class Tiding
     {
         public DateTime DateTimePublication { get; set; }
         public string Header { get; set; }
