@@ -18,7 +18,7 @@ namespace TelegramBot.Repository.Response
             _responseSer = responseService;
         }
 
-        public async Task<List<Tiding>> GetOfficeAsync()
+        public async Task<List<Tiding>> GetTidingsAsync()
         {
             try
             {

@@ -18,7 +18,7 @@ namespace TelegramBot.Repository.Response
             _responseSer = responseService;
         }
 
-        public async Task<List<Project>> GetOfficeAsync()
+        public async Task<List<Project>> GetProjectsAsync()
         {
             try
             {
