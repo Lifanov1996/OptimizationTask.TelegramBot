@@ -43,24 +43,21 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 break;
 
             case "Проекты компании":
-                await botClient.SendTextMessageAsync(message.Chat.Id, "Смотри проекты");
+                await GetProjectMessage(botClient, message);
                 break;
             case "Услуги компании":
                 await GetOfficeAsync(botClient, message);
                 break;
 
             case "Новостная лента":
-                await botClient.SendTextMessageAsync(message.Chat.Id, "Смотри проекты");
+                await GetTidingAsync(botClient, message);
                 break;
             case "Контактная информация":
                 await GetContactAsync(botClient, message);
                 break;
 
             case "Перейти на сайт":
-                await botClient.SendTextMessageAsync(message.Chat.Id, $"<strong>Новая волна</strong>" +
-                                                                        $"\nФайл/" +
-                                                                        $"\nВОФЫЛр твфшгцпвнфр нцвпфныовпцн вфцпрвнцфпво нвцфпвныфрв нцвпфоныпвнц", 
-                                                                        parseMode: ParseMode.Html);
+                await UrlButtonAsync(botClient, message);
                 break;
         }
     }
@@ -95,11 +92,13 @@ async Task HandleMessageMenu(ITelegramBotClient botClient, Message message)
         {
             ResizeKeyboard = true
         };
+        
         await botClient.SendTextMessageAsync(message.Chat.Id, "Choose:", replyMarkup: keyboard);
         return;
     } 
 }
 
+//Получить список проектов
 async Task GetProjectMessage(ITelegramBotClient botClient, Message message)
 {
     Projects project = new(new ResponseServices());
@@ -107,13 +106,14 @@ async Task GetProjectMessage(ITelegramBotClient botClient, Message message)
     foreach (var item in projectsResponse)
     {
         await botClient.SendTextMessageAsync(message.Chat.Id, 
-                                            $"<strong>{item.Header}<strong>" +
                                             $"\n{item.File}" +
+                                            $"<strong>{item.Header}<strong>" +
                                             $"\n{item.Description}",
                                             parseMode: ParseMode.Html);
     }
 }
 
+//Получить список услуг
 async Task GetOfficeAsync(ITelegramBotClient botClient, Message message)
 {
     Offices office = new(new ResponseServices());
@@ -127,6 +127,7 @@ async Task GetOfficeAsync(ITelegramBotClient botClient, Message message)
     }
 }
 
+//Получить список новостей
 async Task GetTidingAsync(ITelegramBotClient botClient, Message message)
 {
     Tidings tiding = new(new ResponseServices());
@@ -162,3 +163,18 @@ async Task GetContactAsync(ITelegramBotClient botClient, Message message)
                                     title: "Адрес компании",
                                     address: $"{contactResponse.CompanyAdress}");
 }
+
+async Task UrlButtonAsync(ITelegramBotClient botClient, Message message)
+{
+    InlineKeyboardMarkup inlineKeyboard = new(new[]
+        {
+            InlineKeyboardButton.WithUrl(
+                text: "Перейти на сайт",
+                url: "https://skillbox.ru/")
+        });
+
+    await botClient.SendTextMessageAsync(message.Chat.Id,
+                                         text: "Пройдите по ссылке ниже",
+                                         replyMarkup: inlineKeyboard);
+}
+                                        
