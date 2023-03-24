@@ -9,16 +9,6 @@ using TelegramBot.Models;
 using TelegramBot.Repository.Request;
 using TelegramBot.Repository.Response;
 
-//Contacts contacts = new(new ResponseServices());
-//var data = contacts.GetContactAsync().Result;
-//Console.WriteLine(data.CompanyAdress);
-//Console.WriteLine(data.CompanyEmail);
-//Console.WriteLine(data.CompanyNumber);
-//Console.WriteLine(data.CompanySocialNetworkFour);
-//Console.WriteLine(data.CompanySocialNetworkTwo);
-
-//Applications app = new Applications();
-//app.PostAppAsync(new Application { NameClient = "Ivan Post", EmailClient = "minal@mail.ru", DescriptionApp = "вфцврицфр вофцмвпцм рпвфцмвс рпфцвмрцпфсмвпры" });
 
 var client = new TelegramBotClient("6185901925:AAE5qxhMueMwahHhJmgr2-jsS3syBqgBTok");
 
@@ -39,7 +29,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         switch(message.Text)
         {
             case "Отправить заявку":
-                await botClient.SendTextMessageAsync(message.Chat.Id, "Отправил заяввку");
+                await PostApplicationAsync(botClient, message);
                 break;
 
             case "Проекты компании":
@@ -78,7 +68,7 @@ Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception ex, Cancell
 
 async Task HandleMessageMenu(ITelegramBotClient botClient, Message message)
 {
-    if (message.Text == "/start")
+    if (message.Text.ToLower() == "/start")
     {
         ReplyKeyboardMarkup keyboard = new(new[]
         {
@@ -96,6 +86,21 @@ async Task HandleMessageMenu(ITelegramBotClient botClient, Message message)
         await botClient.SendTextMessageAsync(message.Chat.Id, "Choose:", replyMarkup: keyboard);
         return;
     } 
+}
+
+//Отправить заявку
+async Task PostApplicationAsync(ITelegramBotClient botClient, Message message)
+{
+    InlineKeyboardMarkup inlineKeyboard = new(new[]
+        {
+            InlineKeyboardButton.WithUrl(
+                text: "Отправить заявку",
+                url: "https://skillbox.ru/")
+        });
+
+    await botClient.SendTextMessageAsync(message.Chat.Id,
+                                         text: "Пройдите по ссылке ниже для отправки заявки",
+                                         replyMarkup: inlineKeyboard);
 }
 
 //Получить список проектов
@@ -164,6 +169,7 @@ async Task GetContactAsync(ITelegramBotClient botClient, Message message)
                                     address: $"{contactResponse.CompanyAdress}");
 }
 
+//Переход на сайт компании
 async Task UrlButtonAsync(ITelegramBotClient botClient, Message message)
 {
     InlineKeyboardMarkup inlineKeyboard = new(new[]
