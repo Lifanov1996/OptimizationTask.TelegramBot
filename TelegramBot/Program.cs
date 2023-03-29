@@ -32,6 +32,10 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 await PostApplicationAsync(botClient, message);
                 break;
 
+            case "Посмотерть информацию по заявке":
+                await botClient.SendTextMessageAsync(message.Chat.Id, text: "Ведите /заявка №заявки");
+                break;
+
             case "Проекты компании":
                 await GetProjectMessage(botClient, message);
                 break;
@@ -50,6 +54,11 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 await UrlButtonAsync(botClient, message);
                 break;
         }
+
+    }
+    if (message.Text.Contains("/заявка"))
+    {
+        await GetApplicationAsync(botClient, message);
     }
     return;
 }
@@ -73,6 +82,7 @@ async Task HandleMessageMenu(ITelegramBotClient botClient, Message message)
         ReplyKeyboardMarkup keyboard = new(new[]
         {
             new KeyboardButton[] {"Отправить заявку"},
+             new KeyboardButton[] {"Посмотерть информацию по заявке"},
             new KeyboardButton[] {"Проекты компании"},
             new KeyboardButton[] {"Услуги компании"},
             new KeyboardButton[] {"Новостная лента"},
@@ -101,6 +111,56 @@ async Task PostApplicationAsync(ITelegramBotClient botClient, Message message)
     await botClient.SendTextMessageAsync(message.Chat.Id,
                                          text: "Пройдите по ссылке ниже для отправки заявки",
                                          replyMarkup: inlineKeyboard);
+
+    //Applications application = new();
+    //Application app = new();
+
+    //await botClient.SendTextMessageAsync(message.Chat.Id,
+    //                                     text: "<strong>Ведите имя:</strong>",
+    //                                     parseMode: ParseMode.Html);
+
+    //app.NameClient = message.Text;
+
+    //await botClient.SendTextMessageAsync(message.Chat.Id,
+    //                                     text: "Ведите Emial",
+    //                                     replyMarkup: new ForceReplyMarkup { Selective = true });       
+
+
+
+    //if (message.ReplyToMessage != null && message.ReplyToMessage.Text != null)
+    //{
+    //    app.EmailClient = message.Text;
+    //    await botClient.SendTextMessageAsync(message.Chat.Id,
+    //                                        text: $"Name - {app.NameClient}, Email - {app.EmailClient}");
+    //}   
+}
+
+//Получить информацию по заявке
+async Task GetApplicationAsync(ITelegramBotClient botClient, Message message)
+{
+    ApplicationGet applicationGet = new(new ResponseServices());
+    var number = message.Text.Remove(0, 7).Trim();
+    //string number = "https://localhost:7297/home/bd9fe97a-70c9-477b-82ef-ae35b5a9cc8f";
+    try
+    {
+        var appGet = await applicationGet.GetApplicationAsync(number);
+            
+        await botClient.SendTextMessageAsync(message.Chat.Id,
+                                             $"<strong>Имя клиента</strong> - {appGet.NameClient}" +
+                                             $"\n<strong>Дата создания заявки</strong> - {appGet.DateTimeCreatApp.ToString("g")}" +
+                                             $"\n<strong>Статус заявки</strong> - {appGet.StatusApp}" +
+                                             $"\n<strong>Email для обратной связи</strong> - {appGet.EmailClient}",
+                                             parseMode: ParseMode.Html);
+            
+    }
+    catch (Exception ex)
+    {
+        await botClient.SendTextMessageAsync(message.Chat.Id,
+                                                    $"<strong>Ошибка загрузки сервиса</strong>" +
+                                                    $"\nНе удалось загрузить данные",
+                                                    parseMode: ParseMode.Html);
+    }
+    
 }
 
 //Получить список проектов
