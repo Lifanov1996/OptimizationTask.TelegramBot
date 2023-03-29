@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -22,7 +23,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
     if (update.Type == UpdateType.Message && update?.Message?.Text != null)
     {
-        Console.WriteLine($"{DateTime.Now.ToString("G")} | {message.Chat.FirstName}");
+        Console.WriteLine($"{DateTime.Now.ToString("G")}  |  {message.Chat.FirstName}");
 
         await HandleMessageMenu(botClient, update.Message);
         
@@ -32,13 +33,14 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
                 await PostApplicationAsync(botClient, message);
                 break;
 
-            case "Посмотерть информацию по заявке":
-                await botClient.SendTextMessageAsync(message.Chat.Id, text: "Ведите /заявка №заявки");
+            case "Посмотреть информацию по заявке":
+                await botClient.SendTextMessageAsync(message.Chat.Id, "Введите номер заявки", replyMarkup: new ForceReplyMarkup { Selective = true });
                 break;
 
             case "Проекты компании":
                 await GetProjectMessage(botClient, message);
                 break;
+
             case "Услуги компании":
                 await GetOfficeAsync(botClient, message);
                 break;
@@ -46,6 +48,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             case "Новостная лента":
                 await GetTidingAsync(botClient, message);
                 break;
+
             case "Контактная информация":
                 await GetContactAsync(botClient, message);
                 break;
@@ -53,13 +56,22 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             case "Перейти на сайт":
                 await UrlButtonAsync(botClient, message);
                 break;
+
+            case "Убрать клавиатуру":
+                await botClient.SendTextMessageAsync(message.Chat.Id,
+                                                    text: "Для добавления клавиатуры введите - <strong>/start</strong>",
+                                                    parseMode: ParseMode.Html,
+                                                    replyMarkup: new ReplyKeyboardRemove());
+                break;
+
         }
 
+        if (message.ReplyToMessage != null && message.ReplyToMessage.Text.Contains("Введите номер заявки"))
+        {
+            await GetApplicationAsync(botClient, message);
+        }
     }
-    if (message.Text.Contains("/заявка"))
-    {
-        await GetApplicationAsync(botClient, message);
-    }
+
     return;
 }
 
@@ -75,6 +87,7 @@ Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception ex, Cancell
     return Task.CompletedTask;
 }
 
+//Клавиатура
 async Task HandleMessageMenu(ITelegramBotClient botClient, Message message)
 {
     if (message.Text.ToLower() == "/start")
@@ -82,18 +95,22 @@ async Task HandleMessageMenu(ITelegramBotClient botClient, Message message)
         ReplyKeyboardMarkup keyboard = new(new[]
         {
             new KeyboardButton[] {"Отправить заявку"},
-             new KeyboardButton[] {"Посмотерть информацию по заявке"},
+            new KeyboardButton[] {"Посмотреть информацию по заявке"},
             new KeyboardButton[] {"Проекты компании"},
             new KeyboardButton[] {"Услуги компании"},
             new KeyboardButton[] {"Новостная лента"},
             new KeyboardButton[] {"Контактная информация"},
-            new KeyboardButton[] {"Перейти на сайт"}
+            new KeyboardButton[] {"Перейти на сайт"},
+            new KeyboardButton[] {"Убрать клавиатуру" }
         })
         {
             ResizeKeyboard = true
         };
         
-        await botClient.SendTextMessageAsync(message.Chat.Id, "Choose:", replyMarkup: keyboard);
+        await botClient.SendTextMessageAsync(message.Chat.Id, 
+                                            "<strong>Выберете команду -></strong>", 
+                                            parseMode: ParseMode.Html,
+                                            replyMarkup: keyboard);
         return;
     } 
 }
@@ -139,25 +156,27 @@ async Task PostApplicationAsync(ITelegramBotClient botClient, Message message)
 async Task GetApplicationAsync(ITelegramBotClient botClient, Message message)
 {
     ApplicationGet applicationGet = new(new ResponseServices());
-    var number = message.Text.Remove(0, 7).Trim();
-    //string number = "https://localhost:7297/home/bd9fe97a-70c9-477b-82ef-ae35b5a9cc8f";
+    var number = message.Text.Trim();
+    
     try
     {
         var appGet = await applicationGet.GetApplicationAsync(number);
             
         await botClient.SendTextMessageAsync(message.Chat.Id,
-                                             $"<strong>Имя клиента</strong> - {appGet.NameClient}" +
                                              $"\n<strong>Дата создания заявки</strong> - {appGet.DateTimeCreatApp.ToString("g")}" +
-                                             $"\n<strong>Статус заявки</strong> - {appGet.StatusApp}" +
-                                             $"\n<strong>Email для обратной связи</strong> - {appGet.EmailClient}",
+                                             $"<strong>Имя клиента</strong> - {appGet.NameClient}" +
+                                             $"\n<strong>Email для обратной связи</strong> - {appGet.EmailClient}" +
+                                             $"\n<strong>Статус заявки</strong> - {appGet.StatusApp}",
                                              parseMode: ParseMode.Html);
             
     }
     catch (Exception ex)
     {
+        Console.WriteLine($"{DateTime.Now.ToString("G")}  |  {message.Chat.FirstName}  |  {ex.Message}");
+
         await botClient.SendTextMessageAsync(message.Chat.Id,
                                                     $"<strong>Ошибка загрузки сервиса</strong>" +
-                                                    $"\nНе удалось загрузить данные",
+                                                    $"\nЗаявка не найдена! Возможно Вы вели не правильный номер заявки",
                                                     parseMode: ParseMode.Html);
     }
     
@@ -167,6 +186,7 @@ async Task GetApplicationAsync(ITelegramBotClient botClient, Message message)
 async Task GetProjectMessage(ITelegramBotClient botClient, Message message)
 {
     Projects project = new(new ResponseServices());
+
     try
     {
         var projectsResponse = await project.GetProjectsAsync();
@@ -181,6 +201,8 @@ async Task GetProjectMessage(ITelegramBotClient botClient, Message message)
     }
     catch(Exception ex)
     {
+        Console.WriteLine($"{DateTime.Now.ToString("G")}  |  {message.Chat.FirstName}  |  {ex.Message}");
+
         await botClient.SendTextMessageAsync(message.Chat.Id,
                                                 $"<strong>Ошибка загрузки сервиса</strong>" +
                                                 $"\nНе удалось загрузить данные",
@@ -192,6 +214,7 @@ async Task GetProjectMessage(ITelegramBotClient botClient, Message message)
 async Task GetOfficeAsync(ITelegramBotClient botClient, Message message)
 {
     Offices office = new(new ResponseServices());
+
     try
     {
         var officesResponse = await office.GetOfficeAsync();
@@ -205,6 +228,8 @@ async Task GetOfficeAsync(ITelegramBotClient botClient, Message message)
     }
     catch(Exception ex)
     {
+        Console.WriteLine($"{DateTime.Now.ToString("G")}  |  {message.Chat.FirstName}  |  {ex.Message}");
+
         await botClient.SendTextMessageAsync(message.Chat.Id,
                                                 $"<strong>Ошибка загрузки сервиса</strong>" +
                                                 $"\nНе удалось загрузить данные",
@@ -223,7 +248,7 @@ async Task GetTidingAsync(ITelegramBotClient botClient, Message message)
         {
             await botClient.SendTextMessageAsync(message.Chat.Id,
                                                 $"{item.File}" +
-                                                $"\nОпубликлванно - {item.DateTimePublication.ToString("G")}" +
+                                                $"\nОпубликoванно - {item.DateTimePublication.ToString("G")}" +
                                                 $"\n<strong>{item.Header}</strong>" +
                                                 $"\n{item.Description}",
                                                 parseMode: ParseMode.Html);
@@ -231,6 +256,8 @@ async Task GetTidingAsync(ITelegramBotClient botClient, Message message)
     }
     catch(Exception ex)
     {
+        Console.WriteLine($"{DateTime.Now.ToString("G")}  |  {message.Chat.FirstName}  |  {ex.Message}");
+
         await botClient.SendTextMessageAsync(message.Chat.Id,
                                                 $"<strong>Ошибка загрузки сервиса</strong>" +
                                                 $"\nНе удалось загрузить данные",
@@ -238,7 +265,7 @@ async Task GetTidingAsync(ITelegramBotClient botClient, Message message)
     }
 }
 
-///Получить контактную информацию
+//Получить контактную информацию
 async Task GetContactAsync(ITelegramBotClient botClient, Message message)
 {
     Contacts contact = new(new ResponseServices());
@@ -262,6 +289,8 @@ async Task GetContactAsync(ITelegramBotClient botClient, Message message)
     }
     catch(Exception ex)
     {
+        Console.WriteLine($"{DateTime.Now.ToString("G")}  |  {message.Chat.FirstName}  |  {ex.Message}");
+
         await botClient.SendTextMessageAsync(message.Chat.Id,
                                                 $"<strong>Ошибка загрузки сервиса</strong>" +
                                                 $"\nНе удалось загрузить данные",
