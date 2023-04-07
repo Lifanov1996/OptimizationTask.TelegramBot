@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json.Serialization;
+using System;
 using System.Linq;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot.Models;
 using TelegramBot.Repository.Request;
@@ -191,12 +193,12 @@ async Task GetProjectMessage(ITelegramBotClient botClient, Message message)
     {
         var projectsResponse = await project.GetProjectsAsync();
         foreach (var item in projectsResponse)
-        {
-            await botClient.SendTextMessageAsync(message.Chat.Id, 
-                                                $"\n{item.File}" +
-                                                $"<strong>{item.Header}<strong>" +
-                                                $"\n{item.Description}",
-                                                parseMode: ParseMode.Html);
+        {         
+            await botClient.SendPhotoAsync(message.Chat.Id,
+                                           photo: new InputOnlineFile(item.UrlImage),
+                                           caption: $"<b>{item.Header}</b>" +
+                                                    $"\n{item.Description}",
+                                           parseMode: ParseMode.Html);
         }
     }
     catch(Exception ex)
@@ -243,15 +245,15 @@ async Task GetTidingAsync(ITelegramBotClient botClient, Message message)
     Tidings tiding = new(new ResponseServices());
     try
     {
-        var tidingsResponse = await tiding.GetTidingsAsync();
-        foreach (var item in tidingsResponse)
+        var tidingRes = await tiding.GetTidingsAsync();
+        foreach (var item in tidingRes)
         {
-            await botClient.SendTextMessageAsync(message.Chat.Id,
-                                                $"{item.File}" +
-                                                $"\nОпубликoванно - {item.DateTimePublication.ToString("G")}" +
-                                                $"\n<strong>{item.Header}</strong>" +
-                                                $"\n{item.Description}",
-                                                parseMode: ParseMode.Html);
+            await botClient.SendPhotoAsync(message.Chat.Id,
+                                           photo: new InputOnlineFile(item.UrlImage),
+                                           caption: $"<i>Опубликованно : {item.DateTimePublication.ToString("g")}</i>" +
+                                                    $"\n<b>{item.Header}</b>" +
+                                                    $"\n{item.Description}",
+                                           parseMode: ParseMode.Html);
         }
     }
     catch(Exception ex)
